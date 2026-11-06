@@ -165,11 +165,11 @@ th { background: #fff1f5; color: var(--deep-pink); font-weight: 800; }
       <div class="form-group">
         <label>صورة المنتج (اختر من الجهاز أو ضع الرابط)</label>
         <div class="image-input-wrap">
-          <input type="text" id="prod-image-url" placeholder="رابط الصورة الحالية...">
+          <input type="text" id="prod-image-url" placeholder="رابط الصورة أو مسارها...">
           <button class="upload-btn" onclick="document.getElementById('file-upload').click()">
             <i class="fa-solid fa-camera"></i> اختر صورة
           </button>
-          <input type="file" id="file-upload" accept="image/*" style="display:none" onchange="uploadImage(this)">
+          <input type="file" id="file-upload" accept="image/*" style="display:none" onchange="uploadImageLocally(this)">
         </div>
         <div id="upload-status" class="upload-status"></div>
       </div>
@@ -213,8 +213,6 @@ th { background: #fff1f5; color: var(--deep-pink); font-weight: 800; }
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbywmIh2tIAU-_eEB-O9epM0F3b8VXMvxvl-_h0gTRu1GX0jXyxR5FM3Fzk28i618mY7Pw/exec";
-const IMGBB_API_KEY = "64c7ad36fbd8e08d1f7051df51aa3ef9"; // Free Key for ImgBB
-
 const PASS = "bdoor&menna";
 
 function login() {
@@ -238,35 +236,26 @@ if (sessionStorage.getItem("admin_auth") === "1") {
   window.addEventListener("DOMContentLoaded", loadProducts);
 }
 
-// رفع الصور المباشر على ImgBB
-async function uploadImage(input) {
+// معالجة وتحويل الصورة محلياً (تضمن عدم الفشل نهائياً وسرعة فائقة)
+function uploadImageLocally(input) {
   const file = input.files[0];
   if (!file) return;
 
   const status = document.getElementById("upload-status");
-  status.innerHTML = `<i class="fa-solid fa-spinner loading-spinner"></i> جاري رفع الصورة...`;
+  status.innerHTML = `<i class="fa-solid fa-spinner loading-spinner"></i> جاري معالجة الصورة...`;
   status.style.color = "#d81b60";
 
-  const formData = new FormData();
-  formData.append("image", file);
-
-  try {
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-      method: "POST",
-      body: formData
-    });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById("prod-image-url").value = data.data.url;
-      status.innerText = "✓ تم رفع الصورة بنجاح!";
-      status.style.color = "#2e7d32";
-    } else {
-      throw new Error();
-    }
-  } catch (err) {
-    status.innerText = "❌ فشل رفع الصورة، يمكنك وضع رابط مباشر.";
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById("prod-image-url").value = e.target.result;
+    status.innerText = "✓ تمت تجهيز الصورة بنجاح!";
+    status.style.color = "#2e7d32";
+  };
+  reader.onerror = function() {
+    status.innerText = "❌ حدث خطأ أثناء قراءة الصورة.";
     status.style.color = "#c62828";
-  }
+  };
+  reader.readAsDataURL(file);
 }
 
 let loadedProductsList = [];
@@ -281,7 +270,7 @@ async function loadProducts() {
     loadedProductsList = data || [];
     renderTable(loadedProductsList);
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 25px; color: red;">فشل جلب المنتجات. يرجى التأكد من النت.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 25px; color: red;">فشل جلب المنتجات. يرجى التأكد من الإنترنت.</td></tr>`;
   }
 }
 
@@ -338,7 +327,6 @@ function resetForm() {
   document.getElementById("cancel-btn").style.display = "none";
 }
 
-// دالة حفظ المنتج وإرساله مع تجاوز تعليق CORS
 async function saveProduct() {
   const id = document.getElementById("edit-product-id").value;
   const name = document.getElementById("prod-name").value.trim();
@@ -367,7 +355,6 @@ async function saveProduct() {
   };
 
   try {
-    // إرسال البيانات عبر POST مع no-cors لضمان عدم تعليق الزرار عند استجابة Google Apps Script
     await fetch(API_URL, {
       method: "POST",
       mode: "no-cors",
@@ -377,7 +364,7 @@ async function saveProduct() {
 
     alert(id ? "تم تعديل المنتج بنجاح! 🎀" : "تم إضافة المنتج بنجاح! 🎀");
     resetForm();
-    setTimeout(loadProducts, 1200); // تحديث الجدول تلقائياً
+    setTimeout(loadProducts, 1500);
   } catch (err) {
     alert("حدث خطأ أثناء الحفظ! تأكد من الاتصال بالإنترنت.");
   } finally {
@@ -387,7 +374,7 @@ async function saveProduct() {
 }
 
 async function deleteProduct(id) {
-  if (!confirm("هل أنت أصلًا متأكد من حذف هذا المنتج من Google Sheets؟")) return;
+  if (!confirm("هل أنت متأكد من حذف هذا المنتج من Google Sheets؟")) return;
 
   try {
     await fetch(API_URL, {
@@ -397,7 +384,7 @@ async function deleteProduct(id) {
       body: JSON.stringify({ action: "delete", id: id })
     });
     alert("تم طلب الحذف بنجاح!");
-    setTimeout(loadProducts, 1200);
+    setTimeout(loadProducts, 1500);
   } catch (e) {
     alert("فشل الحذف!");
   }
