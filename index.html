@@ -229,7 +229,6 @@ setTimeout(removeLoader, 500);
 </div>
 <div class="copyright">© BM cosmetics - AKR</div>
 </footer>
-
 <script>
 const koreanRaw = [
 ["Arencia Vitamin C Booster Shot 30ml","Hk1sgjn6/8f7fc898-5120-45ed-a68c-70b677351b64.jpg",1200,899],
@@ -379,7 +378,6 @@ const koreanRaw = [
 ["Isntree Onion Newpair Booster Shot 2000 – 50ml","Lsk64vpM/725f3073-4539-43a7-9293-8a90f5abaa94.jpg",1350,1150],
 ["Anua PDRN Hyaluronic Acid 100 Moisturizing Cream Set (60 ml + 30 ml)","XNmyTxcY/1bcc61d7-89b6-4b7e-a52b-7a0cf59bcf07.jpg",1400,1060]
 ];
-
 const kidsRaw = [
 ["Blankie 3 in 1 Shampoo + Conditioner + Body Wash","Zqb9rQZ1/c4d76692-b4fb-4ac2-897b-bd28dde931f1.jpg",200,100],
 ["Blankie Kids Hair Cream Anti-Frizz","vBDcK64x/96e53724-f5d7-4a3d-9c94-7747c757773d.jpg",210,110],
@@ -413,7 +411,6 @@ const kidsRaw = [
 ["Happiness Baby Dreams Hair Cream (300 gm)","RFHyR4c2/a4aa76bf-7eba-4a1b-b98e-d53aab9e60c7.jpg",290,250],
 ["Happiness Baby Dreams Shampoo 2 in 1 (400 ML)","yxhGMjrH/c02fbf90-bc29-40dd-bd08-58253248d6b0.jpg",240,210]
 ];
-
 const hairRaw = [
 ["ACM Novophane Reactional Anti-Hair Loss Lotion 100ml","Zn8HmrLR/57d59f9b-192b-4cf0-ba65-5c3e49ea5063.jpg",1000,850],
 ["Tettello Ultra Restorative Hair Serum (120 ml)","Dy7ds4g8/f14e2225-f962-4ece-a3d0-438c9d79ed61.jpg",350,300],
@@ -478,7 +475,6 @@ const hairRaw = [
 ["L'Oréal Paris Elvive Total Repair 5 Repairing Shampoo","cJzXB1Hd/d3a676bc-a4d2-4b6b-af0f-fdf452671d29.jpg",240,195],
 ["K18 Leave-In Molecular Repair Hair Mask","KYK2XkFw/bc56cad3-43ba-4ba2-a83e-406da5594973.jpg",5000,3900]
 ];
-
 const skinRaw = [
 ["Alejon Facial Moisturizing Cream 75gm","c17kVn4T/22963407-356c-4084-8ed4-7a55480d8e1f.jpg",280,240],
 ["Alejon Facial Moisturizer Gel 75gm","c4X9JG3P/908ee28d-dddd-4292-be83-45495efeb3a0.jpg",270,240],
@@ -636,10 +632,8 @@ const skinRaw = [
 ["PanOxyl Acne Creamy Wash 4% Benzoyl Peroxide – 170g","dV6xWqyB/418f3684-6928-4907-b360-5cab8cfa8b88.jpg",1450,1150]
 ];
 </script>
-
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbywmIh2tIAU-_eEB-O9epM0F3b8VXMvxvl-_h0gTRu1GX0jXyxR5FM3Fzk28i618mY7Pw/exec";
-
 const translations = {
 ar: {
 home: "الرئيسية",
@@ -708,7 +702,6 @@ searchResults: "Search Results",
 noResults: "No matching products found"
 }
 };
-
 let currentLang = "ar";
 let cart = [];
 let currentProducts = [];
@@ -716,46 +709,49 @@ let modalProduct = null;
 window.activeCategoryName = "";
 window.searchMode = false;
 const IMG_BASE = "https://i.postimg.cc/";
-
 // تجميع المنتجات القديمة الثابتة
-let dynamicCategoryProducts = {
-  "Korean": (typeof koreanRaw !== "undefined" ? koreanRaw : []).map(r => ({ name: r[0], image: IMG_BASE + r[1], oldPrice: r[2], newPrice: r[3], category: 'Korean' })),
-  "Skin Care": (typeof skinRaw !== "undefined" ? skinRaw : []).map(r => ({ name: r[0], image: IMG_BASE + r[1], oldPrice: r[2], newPrice: r[3], category: 'Skin Care' })),
-  "Hair Care": (typeof hairRaw !== "undefined" ? hairRaw : []).map(r => ({ name: r[0], image: IMG_BASE + r[1], oldPrice: r[2], newPrice: r[3], category: 'Hair Care' })),
-  "Kids": (typeof kidsRaw !== "undefined" ? kidsRaw : []).map(r => ({ name: r[0], image: IMG_BASE + r[1], oldPrice: r[2], newPrice: r[3], category: 'Kids' })),
-  "Body Care": []
+const initialStaticProducts = {
+"Korean": (typeof koreanRaw !== "undefined" ? koreanRaw : []).map(r => ({ name: r[0], image: IMG_BASE + r[1], oldPrice: r[2], newPrice: r[3], category: 'Korean' })),
+"Skin Care": (typeof skinRaw !== "undefined" ? skinRaw : []).map(r => ({ name: r[0], image: IMG_BASE + r[1], oldPrice: r[2], newPrice: r[3], category: 'Skin Care' })),
+"Hair Care": (typeof hairRaw !== "undefined" ? hairRaw : []).map(r => ({ name: r[0], image: IMG_BASE + r[1], oldPrice: r[2], newPrice: r[3], category: 'Hair Care' })),
+"Kids": (typeof kidsRaw !== "undefined" ? kidsRaw : []).map(r => ({ name: r[0], image: IMG_BASE + r[1], oldPrice: r[2], newPrice: r[3], category: 'Kids' })),
+"Body Care": []
 };
-
-// Caching strategy: طلب السيرفر مرة واحدة فقط للسرعة الفائقة
+let dynamicCategoryProducts = JSON.parse(JSON.stringify(initialStaticProducts));
 let isSheetFetched = false;
-
 async function fetchSheetProducts() {
-  if (isSheetFetched) return;
-  try {
-    const res = await fetch(API_URL);
-    const sheetData = await res.json();
-    if (sheetData && Array.isArray(sheetData)) {
-      sheetData.forEach(p => {
-        let cat = p.category || "Skin Care";
-        if (!dynamicCategoryProducts[cat]) {
-          dynamicCategoryProducts[cat] = [];
-        }
-        dynamicCategoryProducts[cat].push({
-          id: p.id,
-          name: p.name,
-          image: p.image_url || '',
-          oldPrice: p.old_price || null,
-          newPrice: p.new_price,
-          category: cat
-        });
-      });
-      isSheetFetched = true;
-    }
-  } catch (err) {
-    console.error("Error loading sheet products:", err);
-  }
+if (isSheetFetched) return;
+try {
+const res = await fetch(API_URL);
+const sheetData = await res.json();
+if (sheetData && Array.isArray(sheetData)) {
+// إعادة البناء بدواعي إزالة التكرار
+let tempCat = JSON.parse(JSON.stringify(initialStaticProducts));
+sheetData.forEach(p => {
+let cat = p.category || "Skin Care";
+if (!tempCat[cat]) {
+tempCat[cat] = [];
 }
-
+// منع التكرار بناءً على اسم المنتج
+const exists = tempCat[cat].some(item => item.name.trim().toLowerCase() === p.name.trim().toLowerCase());
+if (!exists) {
+tempCat[cat].push({
+id: p.id,
+name: p.name,
+image: p.image_url || '',
+oldPrice: p.old_price || null,
+newPrice: p.new_price,
+category: cat
+});
+}
+});
+dynamicCategoryProducts = tempCat;
+isSheetFetched = true;
+}
+} catch (err) {
+console.error("Error loading sheet products:", err);
+}
+}
 function similarityScore(s1, s2) {
 let longer = s1, shorter = s2;
 if (s1.length < s2.length) { longer = s2; shorter = s1; }
@@ -804,7 +800,6 @@ if (!matched) return false;
 }
 return true;
 }
-
 function applyPlaceholders() {
 document.querySelectorAll("[data-placeholder]").forEach(function(el) {
 const key = el.getAttribute("data-placeholder");
@@ -863,7 +858,6 @@ document.getElementById("general-search-input").value = "";
 refreshFloating();
 window.scrollTo({ top: 0, behavior: "smooth" });
 }
-
 async function handleGeneralSearch(query, keepScroll) {
 query = (query || "").trim();
 if (!query) {
@@ -873,7 +867,7 @@ return;
 await fetchSheetProducts();
 let allProds = [];
 for (let cat in dynamicCategoryProducts) {
-  allProds = allProds.concat(dynamicCategoryProducts[cat]);
+allProds = allProds.concat(dynamicCategoryProducts[cat]);
 }
 let filtered = allProds.filter(p => matchQuery(p.name, query));
 window.searchMode = true;
@@ -885,7 +879,6 @@ renderProductsGrid(filtered);
 refreshFloating();
 if (!keepScroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
-
 function handleCategorySearch(query) {
 if (window.searchMode) {
 handleGeneralSearch(document.getElementById("general-search-input").value, true);
@@ -895,7 +888,6 @@ let products = dynamicCategoryProducts[window.activeCategoryName] || [];
 let filtered = products.filter(p => matchQuery(p.name, query));
 renderProductsGrid(filtered);
 }
-
 function openCategory(categoryName, keepScroll) {
 closeProductModal();
 window.searchMode = false;
@@ -904,71 +896,48 @@ hideAllPages();
 document.getElementById("products-page").style.display = "block";
 document.getElementById("category-title").innerText = categoryName;
 document.getElementById("category-search-input").value = "";
-
-// تفريغ أوتوماتيكي سريع لتجنب ظهور بضائع القسم السابق
 document.getElementById("products-grid").innerHTML = "";
-
 let products = dynamicCategoryProducts[categoryName] || [];
 renderProductsGrid(products);
 refreshFloating();
 if (!keepScroll) window.scrollTo({ top: 0, behavior: "smooth" });
-
-// جلب المنتجات في الخلفية لو لسه متجابتش من غير تعطيل الصفحة
 fetchSheetProducts().then(() => {
-  if (window.activeCategoryName === categoryName) {
-    renderProductsGrid(dynamicCategoryProducts[categoryName] || []);
-  }
+if (window.activeCategoryName === categoryName) {
+renderProductsGrid(dynamicCategoryProducts[categoryName] || []);
+}
 });
 }
-
 function renderProductsGrid(products) {
 currentProducts = products;
 const productsGrid = document.getElementById("products-grid");
 productsGrid.innerHTML = "";
 if (products.length === 0) {
-productsGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #888; padding: 30px;">${translations[currentLang].noResults}</p>`;
+productsGrid.innerHTML = ⁠<p style="grid-column: 1/-1; text-align: center; color: #888; padding: 30px;">${translations[currentLang].noResults}</p>⁠;
 return;
 }
 products.forEach(function(product, index) {
 const imageBlock = product.image
-? `<div class="product-image-wrap"><img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/200?text=BM+Cosmetics'"></div>`
-: `<div class="product-image-wrap" style="display:flex; align-items:center; justify-content:center; background:#fff5f8;">
-<i class="fa-solid fa-heart" style="font-size:65px; color:#ffb6c1;"></i>
-</div>`;
-const oldPriceHTML = product.oldPrice ? `<span class="old-price">${product.oldPrice} EGP</span>` : '';
-const productHTML = `
-<div class="product-card" onclick="openProductModal(${index})">
-${imageBlock}
-<div class="product-info">
-<div class="product-name">${product.name}</div>
-<div class="product-price">
-${oldPriceHTML}
-<span class="new-price">${product.newPrice} EGP</span>
-</div>
-<button class="add-cart-btn" onclick="event.stopPropagation(); addToCartByIndex(${index}, this)">
-<i class="fa-solid fa-cart-plus"></i> ${translations[currentLang].addToCart}
-</button>
-</div>
-</div>
-`;
+? ⁠<div class="product-image-wrap"><img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/200?text=BM+Cosmetics'"></div>⁠
+: ⁠<div class="product-image-wrap" style="display:flex; align-items:center; justify-content:center; background:#fff5f8;"> <i class="fa-solid fa-heart" style="font-size:65px; color:#ffb6c1;"></i> </div>⁠;
+const oldPriceHTML = product.oldPrice ? ⁠<span class="old-price">${product.oldPrice} EGP</span>⁠ : '';
+const productHTML = ⁠<div class="product-card" onclick="openProductModal(${index})"> ${imageBlock} <div class="product-info"> <div class="product-name">${product.name}</div> <div class="product-price"> ${oldPriceHTML} <span class="new-price">${product.newPrice} EGP</span> </div> <button class="add-cart-btn" onclick="event.stopPropagation(); addToCartByIndex(${index}, this)"> <i class="fa-solid fa-cart-plus"></i> ${translations[currentLang].addToCart} </button> </div> </div>⁠;
 productsGrid.insertAdjacentHTML("beforeend", productHTML);
 });
 }
-
 function openProductModal(index) {
 const product = currentProducts[index];
 if (!product) return;
 modalProduct = product;
 const imgWrap = document.getElementById("modal-image-wrap");
 if (product.image) {
-imgWrap.innerHTML = `<img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300?text=BM+Cosmetics'">`;
+imgWrap.innerHTML = ⁠<img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300?text=BM+Cosmetics'">⁠;
 } else {
-imgWrap.innerHTML = `<i class="fa-solid fa-heart"></i>`;
+imgWrap.innerHTML = ⁠<i class="fa-solid fa-heart"></i>⁠;
 }
 document.getElementById("modal-name").innerText = product.name;
 document.getElementById("modal-price").innerHTML =
-(product.oldPrice ? `<span class="old-price">${product.oldPrice} EGP</span>` : '') +
-`<span class="new-price">${product.newPrice} EGP</span>`;
+(product.oldPrice ? ⁠<span class="old-price">${product.oldPrice} EGP</span>⁠ : '') +
+⁠<span class="new-price">${product.newPrice} EGP</span>⁠;
 document.getElementById("modal-add-btn").innerHTML =
 '<i class="fa-solid fa-cart-plus"></i> ' + translations[currentLang].addToCart;
 const modal = document.getElementById("product-modal");
@@ -980,7 +949,6 @@ modal.classList.add("visible");
 });
 });
 }
-
 function closeProductModal(event) {
 if (event && event.target && event.target.id !== "product-modal") return;
 const modal = document.getElementById("product-modal");
@@ -994,11 +962,9 @@ modal.classList.remove("open");
 }
 }, 250);
 }
-
 document.addEventListener("keydown", function(e) {
 if (e.key === "Escape") closeProductModal();
 });
-
 function addFromModal(button) {
 if (!modalProduct) return;
 addToCart(modalProduct.name, modalProduct.newPrice, modalProduct.image || "", button);
@@ -1008,7 +974,6 @@ const p = currentProducts[index];
 if (!p) return;
 addToCart(p.name, p.newPrice, p.image || "", button);
 }
-
 function addToCart(name, price, image, button) {
 let existingItem = cart.find(item => item.name === name && item.price === Number(price));
 if (existingItem) {
@@ -1034,7 +999,6 @@ button.disabled = false;
 }, 900);
 }
 }
-
 function changeQuantity(index, delta) {
 let newQty = cart[index].quantity + delta;
 if (newQty >= 1 && newQty <= 10) {
@@ -1042,7 +1006,6 @@ cart[index].quantity = newQty;
 updateCart();
 }
 }
-
 function refreshFloating() {
 const btn = document.getElementById("floating-checkout");
 if (!btn) return;
@@ -1055,7 +1018,6 @@ btn.classList.add("show");
 btn.classList.remove("show");
 }
 }
-
 function updateCart() {
 let totalCount = 0;
 cart.forEach(item => totalCount += item.quantity);
@@ -1066,12 +1028,7 @@ const cartItems = document.getElementById("cart-items");
 if (!cartItems) return;
 const shipPlus = document.getElementById("ship-plus");
 if (cart.length === 0) {
-cartItems.innerHTML = `
-<div class="empty-cart">
-<i class="fa-solid fa-cart-shopping"></i>
-<p>${translations[currentLang].emptyCart}</p>
-</div>
-`;
+cartItems.innerHTML = ⁠<div class="empty-cart"> <i class="fa-solid fa-cart-shopping"></i> <p>${translations[currentLang].emptyCart}</p> </div>⁠;
 document.getElementById("cart-total-price").innerText = "0 EGP";
 if (shipPlus) shipPlus.style.display = "none";
 document.getElementById("checkout-button").style.display = "none";
@@ -1083,31 +1040,14 @@ let total = 0;
 cartItems.innerHTML = "";
 cart.forEach(function(item, index) {
 total += Number(item.price) * item.quantity;
-cartItems.insertAdjacentHTML("beforeend", `
-<div class="cart-item">
-${item.image ? `<img class="cart-item-image" src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80?text=BM'">` : `
+cartItems.insertAdjacentHTML("beforeend", ⁠<div class="cart-item"> ${item.image ?⁠<img class="cart-item-image" src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80?text=BM'">⁠:⁠
 <div class="cart-item-image" style="display:flex; align-items:center; justify-content:center; color:#ffb6c1; font-size:25px;">
 <i class="fa-solid fa-heart"></i>
 </div>
-`}
-<div class="cart-item-info">
-<div class="cart-item-name">${item.name}</div>
-<div class="cart-item-price">${item.price * item.quantity} EGP</div>
-<div class="quantity-controls">
-<button class="qty-btn" onclick="changeQuantity(${index}, 1)">+</button>
-<span class="qty-display">${translations[currentLang].amountText}${item.quantity}</span>
-<button class="qty-btn" onclick="changeQuantity(${index}, -1)">-</button>
-</div>
-</div>
-<button class="remove-item" onclick="removeFromCart(${index})">
-<i class="fa-solid fa-trash"></i>
-</button>
-</div>
-`);
+⁠} <div class="cart-item-info"> <div class="cart-item-name">${item.name}</div> <div class="cart-item-price">${item.price * item.quantity} EGP</div> <div class="quantity-controls"> <button class="qty-btn" onclick="changeQuantity(${index}, 1)">+</button> <span class="qty-display">${translations[currentLang].amountText}${item.quantity}</span> <button class="qty-btn" onclick="changeQuantity(${index}, -1)">-</button> </div> </div> <button class="remove-item" onclick="removeFromCart(${index})"> <i class="fa-solid fa-trash"></i> </button> </div> ⁠);
 });
 document.getElementById("cart-total-price").innerText = total + " EGP";
 }
-
 function removeFromCart(index) {
 cart.splice(index, 1);
 updateCart();
@@ -1127,7 +1067,6 @@ document.getElementById("checkout-page").style.display = "block";
 refreshFloating();
 window.scrollTo({ top: 0, behavior: "smooth" });
 }
-
 function submitOrder() {
 if (cart.length === 0) return;
 const name = document.getElementById("customer-name").value.trim();
@@ -1140,20 +1079,19 @@ alert(currentLang === "ar" ? "من فضلك املأ كل البيانات ال�
 return;
 }
 const orderDetails = cart.map(function(item) {
-return `- ${item.name} (الكمية: ${item.quantity}) - ${item.price * item.quantity} EGP`;
+return ⁠- ${item.name} (الكمية: ${item.quantity}) - ${item.price * item.quantity} EGP⁠;
 }).join("\n");
 const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-const message = `مرحباً، اريد طلب المنتجات الآتية:\n` +
-`${orderDetails}\n\n` +
-`الإجمالي: ${total} EGP + مصاريف الشحن\n\n` +
-`الاسم: ${name}\n` +
-`الهاتف: ${phone}\n` +
-`العنوان: ${address}\n` +
-`طريقة الدفع: ${paymentMethod}`;
+const message = ⁠مرحباً، اريد طلب المنتجات الآتية:\n⁠ +
+⁠${orderDetails}\n\n⁠ +
+⁠الإجمالي: ${total} EGP + مصاريف الشحن\n\n⁠ +
+⁠الاسم: ${name}\n⁠ +
+⁠الهاتف: ${phone}\n⁠ +
+⁠العنوان: ${address}\n⁠ +
+⁠طريقة الدفع: ${paymentMethod}⁠;
 const whatsappUrl = "https://wa.me/201099872665?text=" + encodeURIComponent(message);
 window.open(whatsappUrl, "_blank");
 }
-
 document.addEventListener("DOMContentLoaded", function() {
 try { applyPlaceholders(); } catch (e) { console.error(e); }
 try { updateCart(); } catch (e) { console.error(e); }
